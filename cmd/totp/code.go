@@ -15,32 +15,50 @@
 package main
 
 import (
-	"encoding/base32"
 	"fmt"
 	"os"
 
 	"github.com/spf13/cobra"
 
-	"go.linka.cloud/totp"
+	totp "go.linka.cloud/totp"
 )
 
 var (
-	generateCmd = &cobra.Command{
-		Use:     "generate [issuer] [account]",
-		Short:   "Generate a new TOTP account",
-		Aliases: []string{"new", "make", "gen"},
-		Args:    cobra.ExactArgs(2),
+	codeCmd = &cobra.Command{
+		Use:               "code [account]",
+		Short:             "Generates a TOTP code for the account",
+		Aliases:           []string{"get", "code"},
+		ValidArgsFunction: completeAccounts,
 		Run: func(cmd *cobra.Command, args []string) {
-			a, err := totp.NewOTPAccount(args[0], args[1])
+			as, err := loadFile(configPath)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			fmt.Println(base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(a.Secret))
+			var a *totp.OTPAccount
+			for _, v := range as {
+				if v.GetName() == args[0] {
+					a = v
+					break
+				}
+			}
+			if a == nil {
+				fmt.Printf("account '%s' not found\n", args[0])
+				os.Exit(1)
+			}
+			c, err := a.Generate()
+			if err != nil {
+				fmt.Printf("failed to generate code: %v\n", err)
+			}
+			if quiet {
+				fmt.Printf(c)
+				return
+			}
+			fmt.Println(c, " ", a.ValidFor())
 		},
 	}
 )
 
 func init() {
-	rootCmd.AddCommand(generateCmd)
+	rootCmd.AddCommand(codeCmd)
 }

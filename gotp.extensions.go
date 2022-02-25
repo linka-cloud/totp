@@ -15,6 +15,7 @@
 package totp
 
 import (
+	"crypto/rand"
 	"encoding/base32"
 	"fmt"
 	"time"
@@ -22,29 +23,105 @@ import (
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/hotp"
 	"github.com/pquerna/otp/totp"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
 	Period = 30
 )
 
+type options struct {
+	alg    Algorithm
+	size   uint
+	digit  Digit
+	period uint
+}
+
+type Option func(o *options)
+
+func WithPeriod(seconds uint) Option {
+	return func(o *options) {
+		o.period = seconds
+	}
+}
+
+func WithDigits(d Digit) Option {
+	return func(o *options) {
+		o.digit = d
+	}
+}
+
+func WithAlgorithm(al Algorithm) Option {
+	return func(o *options) {
+		switch al {
+		case AlgorithmSHA256, AlgorithmSHA512, AlgorithmMD5:
+			o.alg = al
+		default:
+			o.alg = AlgorithmSHA1
+		}
+	}
+}
+
+func WithSecretSize(size uint) Option {
+	return func(o *options) {
+		o.size = size
+	}
+}
+
+func NewOTPAccount(issuer, name string, opts ...Option) (*OTPAccount, error) {
+	o := &options{}
+	for _, fn := range opts {
+		fn(o)
+	}
+	if issuer == "" {
+		return nil, otp.ErrGenerateMissingIssuer
+	}
+	if name == "" {
+		return nil, otp.ErrGenerateMissingAccountName
+	}
+	if o.period == 0 {
+		o.period = 30
+	}
+	if o.size == 0 {
+		o.size = 20
+	}
+	if o.digit == 0 {
+		o.digit = DigitSix
+	}
+	// TODO(adphi): URL: otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&issuer=Example
+	secret := make([]byte, o.size)
+	_, err := rand.Reader.Read(secret)
+	if err != nil {
+		return nil, err
+	}
+	typ := OTPTypeTOTP
+	return &OTPAccount{
+		Name:      proto.String(name),
+		Issuer:    proto.String(issuer),
+		Algorithm: &o.alg,
+		Secret:    secret,
+		Digits:    &o.digit,
+		Type:      &typ,
+	}, nil
+}
+
 func (x *OTPAccount) opts() totp.ValidateOpts {
 	opts := totp.ValidateOpts{}
 	switch x.GetDigits() {
-	case DigitSix:
-		opts.Digits = otp.DigitsSix
 	case DigitEight:
 		opts.Digits = otp.DigitsEight
+	default:
+		opts.Digits = otp.DigitsSix
 	}
 	switch x.GetAlgorithm() {
-	case AlgorithmSHA1:
-		opts.Algorithm = otp.AlgorithmSHA1
 	case AlgorithmSHA256:
 		opts.Algorithm = otp.AlgorithmSHA256
 	case AlgorithmSHA512:
 		opts.Algorithm = otp.AlgorithmSHA512
 	case AlgorithmMD5:
 		opts.Algorithm = otp.AlgorithmMD5
+	default:
+		opts.Algorithm = otp.AlgorithmSHA1
 	}
 	return opts
 }

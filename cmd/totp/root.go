@@ -68,6 +68,24 @@ func loadFile(path string) ([]*totp.OTPAccount, error) {
 	return load(b)
 }
 
+func loadOrCreate(path string) ([]*totp.OTPAccount, error) {
+	as, err := loadFile(configPath)
+	if err == nil {
+		return as, nil
+	}
+	if !os.IsNotExist(err) {
+		return nil, err
+	}
+	if err := os.MkdirAll(filepath.Dir(configPath), 0700); err != nil {
+		return nil, fmt.Errorf("failed to create config directory: %w", err)
+	}
+	f, err := os.Create(configPath)
+	if err != nil {
+		return nil, fmt.Errorf("create config file: %w", err)
+	}
+	return nil, f.Close()
+}
+
 func fromGoogleAuthenticatorMigration(data string) ([]*totp.OTPAccount, error) {
 	q, err := url.QueryUnescape(data)
 	if err != nil {

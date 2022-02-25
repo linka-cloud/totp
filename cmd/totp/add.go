@@ -18,7 +18,6 @@ import (
 	"encoding/base32"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -39,17 +38,7 @@ var (
 				fmt.Println("invalid name or secret")
 				os.Exit(1)
 			}
-			as, err := loadFile(configPath)
-			if os.IsNotExist(err) {
-				if err := os.MkdirAll(filepath.Dir(configPath), 0700); err != nil {
-					fmt.Println("failed to create config directory: ", err)
-					os.Exit(1)
-				}
-				var f *os.File
-				if f, err = os.Create(configPath); err == nil {
-					err = f.Close()
-				}
-			}
+			as, err := loadOrCreate(configPath)
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
