@@ -1,0 +1,65 @@
+// Unofficial protobuf definition of Google Authenticator Migration exports
+// Based on Google Authenticator 5.10
+// Chris van Marle 04-06-2020
+
+syntax = "proto3";
+
+option go_package = "go.linka.cloud/totp";
+
+import "patch/go.proto";
+
+option (go.lint).enums = false;
+option (go.lint).values = false;
+
+message OtpData {
+  option (go.message).name = "OTPData";
+  repeated OtpAccount otp_accounts = 1 [(go.field).name = "OTPAccounts"];
+
+  optional int32 version = 2;
+
+  optional int32 batch_size = 3;
+
+  optional int32 batch_index = 4;
+
+  optional int32 batch_id = 5 [(go.field).name = "BatchID"];
+}
+
+message OtpAccount {
+  option (go.message).name = "OTPAccount";
+  optional bytes secret = 1;
+
+  optional string name = 2;
+
+  optional string issuer = 3;
+
+  optional Algorithm algorithm = 4;
+
+  optional DigitCount digits = 5;
+
+  optional OtpType type = 6;
+
+  optional int64 counter = 7;
+}
+
+enum Algorithm {
+  option (go.enum) = {name: 'Algorithm'};
+  ALGORITHM_TYPE_UNSPECIFIED = 0 [(go.value).name = "AlgorithmUnspecified"];
+  SHA1 = 1 [(go.value).name = "AlgorithmSHA1"];
+  SHA256 = 2 [(go.value).name = "AlgorithmSHA256"];
+  SHA512 = 3 [(go.value).name = "AlgorithmSHA512"];
+  MD5 = 4 [(go.value).name = "AlgorithmMD5"];
+}
+
+enum DigitCount {
+  option (go.enum) = {name: 'Digit'};
+  DIGIT_COUNT_UNSPECIFIED = 0 [(go.value).name = "DigitUnspecified"];
+  SIX = 1 [(go.value).name = "DigitSix"];
+  EIGHT = 2 [(go.value).name = "DigitEight"];
+}
+
+enum OtpType {
+  option (go.enum) = {name: 'OTPType'};
+  OTP_TYPE_UNSPECIFIED = 0 [(go.value).name = "OTPTypeUnspecified"];
+  HOTP = 1 [(go.value).name = "OTPTypeHOTP"];
+  TOTP = 2 [(go.value).name = "OTPTypeTOTP"];
+}
