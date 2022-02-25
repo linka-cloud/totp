@@ -79,6 +79,10 @@ func NewOTPAccount(issuer, name string, opts ...Option) (*OTPAccount, error) {
 	if name == "" {
 		return nil, otp.ErrGenerateMissingAccountName
 	}
+
+	if o.size == 0 {
+		o.size = 20
+	}
 	secret := make([]byte, o.size)
 	if _, err := rand.Reader.Read(secret); err != nil {
 		return nil, err
