@@ -35,6 +35,17 @@ var (
 
 	rootCmd = &cobra.Command{
 		Use: "totp",
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if !strings.HasPrefix(configPath, "~/") {
+				return nil
+			}
+			h, err := os.UserHomeDir()
+			if err != nil {
+				return fmt.Errorf("home: %w", err)
+			}
+			configPath = filepath.Join(h, strings.TrimPrefix(configPath, "~/"))
+			return nil
+		},
 	}
 )
 
@@ -51,13 +62,6 @@ func envd(name, v string) string {
 }
 
 func loadFile(path string) ([]*totp.OTPAccount, error) {
-	if strings.HasPrefix(path, "~/") {
-		h, err := os.UserHomeDir()
-		if err != nil {
-			return nil, fmt.Errorf("home: %w", err)
-		}
-		path = filepath.Join(h, strings.TrimPrefix(path, "~/"))
-	}
 	b, err := ioutil.ReadFile(path)
 	if os.IsNotExist(err) {
 		return nil, nil
@@ -69,17 +73,17 @@ func loadFile(path string) ([]*totp.OTPAccount, error) {
 }
 
 func loadOrCreate(path string) ([]*totp.OTPAccount, error) {
-	as, err := loadFile(configPath)
+	as, err := loadFile(path)
 	if err == nil {
 		return as, nil
 	}
 	if !os.IsNotExist(err) {
 		return nil, err
 	}
-	if err := os.MkdirAll(filepath.Dir(configPath), 0700); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
 		return nil, fmt.Errorf("failed to create config directory: %w", err)
 	}
-	f, err := os.Create(configPath)
+	f, err := os.Create(path)
 	if err != nil {
 		return nil, fmt.Errorf("create config file: %w", err)
 	}
@@ -106,7 +110,7 @@ func load(b []byte) ([]*totp.OTPAccount, error) {
 	return p.OTPAccounts, nil
 }
 
-func save(as []*totp.OTPAccount) {
+func save(path string, as []*totp.OTPAccount) {
 	data := &totp.OTPData{
 		OTPAccounts: as,
 	}
@@ -115,7 +119,7 @@ func save(as []*totp.OTPAccount) {
 		fmt.Printf("encode failed: %v\n", err)
 		os.Exit(1)
 	}
-	tmp := configPath + ".tmp"
+	tmp := path + ".tmp"
 	if err := ioutil.WriteFile(tmp, b, 0700); err != nil {
 		fmt.Printf("write config failed: %v\n", err)
 		os.Exit(1)

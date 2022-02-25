@@ -29,7 +29,7 @@ export GOBIN=$(PWD)/.bin
 
 export PATH := $(GOBIN):$(PATH)
 
-install: clean proto
+install:
 	@go build -o /usr/local/bin/totp ./cmd/totp
 
 bin:

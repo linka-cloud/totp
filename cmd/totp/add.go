@@ -64,7 +64,7 @@ var (
 				fmt.Println("validate config failed: ", err)
 				os.Exit(1)
 			}
-			save(append(as, a))
+			save(configPath, append(as, a))
 		},
 	}
 )

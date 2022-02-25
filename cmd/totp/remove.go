@@ -46,7 +46,7 @@ var (
 				os.Exit(1)
 			}
 			as = append(as[:index], as[index+1:]...)
-			save(as)
+			save(configPath, as)
 		},
 	}
 )
