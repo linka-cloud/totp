@@ -15,8 +15,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
+	"image/png"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -126,6 +128,23 @@ func save(path string, as []*totp.OTPAccount) {
 	}
 	if err := os.Rename(tmp, configPath); err != nil {
 		fmt.Printf("write config failed: %v\n", err)
+		os.Exit(1)
+	}
+}
+
+func saveAsQRCode(path string, a *totp.OTPAccount) {
+	img, err := a.Image(200, 200)
+	if err != nil {
+		fmt.Println("failed to generate qrcode: ", err)
+		os.Exit(1)
+	}
+	var buf bytes.Buffer
+	if err := png.Encode(&buf, img); err != nil {
+		fmt.Println("failed to encode qrcode: ", err)
+		os.Exit(1)
+	}
+	if err := ioutil.WriteFile(path, buf.Bytes(), 0700); err != nil {
+		fmt.Println("failed to write qrcode: ", err)
 		os.Exit(1)
 	}
 }

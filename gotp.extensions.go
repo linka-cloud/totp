@@ -18,8 +18,13 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"fmt"
+	"image"
+	"net/url"
+	"strconv"
 	"time"
 
+	"github.com/boombuler/barcode"
+	"github.com/boombuler/barcode/qr"
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/hotp"
 	"github.com/pquerna/otp/totp"
@@ -31,23 +36,17 @@ const (
 )
 
 type options struct {
-	alg    Algorithm
+	alg    *Algorithm
 	size   uint
-	digit  Digit
-	period uint
+	digit  *Digit
+	period *uint
 }
 
 type Option func(o *options)
 
-func WithPeriod(seconds uint) Option {
-	return func(o *options) {
-		o.period = seconds
-	}
-}
-
 func WithDigits(d Digit) Option {
 	return func(o *options) {
-		o.digit = d
+		o.digit = &d
 	}
 }
 
@@ -55,9 +54,10 @@ func WithAlgorithm(al Algorithm) Option {
 	return func(o *options) {
 		switch al {
 		case AlgorithmSHA256, AlgorithmSHA512, AlgorithmMD5:
-			o.alg = al
+			o.alg = &al
 		default:
-			o.alg = AlgorithmSHA1
+			v := AlgorithmSHA1
+			o.alg = &v
 		}
 	}
 }
@@ -79,30 +79,52 @@ func NewOTPAccount(issuer, name string, opts ...Option) (*OTPAccount, error) {
 	if name == "" {
 		return nil, otp.ErrGenerateMissingAccountName
 	}
-	if o.period == 0 {
-		o.period = 30
-	}
-	if o.size == 0 {
-		o.size = 20
-	}
-	if o.digit == 0 {
-		o.digit = DigitSix
-	}
-	// TODO(adphi): URL: otpauth://totp/Example:alice@google.com?secret=JBSWY3DPEHPK3PXP&issuer=Example
 	secret := make([]byte, o.size)
-	_, err := rand.Reader.Read(secret)
+	if _, err := rand.Reader.Read(secret); err != nil {
+		return nil, err
+	}
+	a := &OTPAccount{
+		Name:      proto.String(name),
+		Issuer:    proto.String(issuer),
+		Algorithm: o.alg,
+		Secret:    secret,
+		Digits:    o.digit,
+	}
+	a.Default()
+	return a, nil
+}
+
+func (x *OTPAccount) URL() string {
+	v := url.Values{}
+	v.Set("secret", base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(x.Secret))
+	v.Set("issuer", x.GetIssuer())
+	v.Set("period", strconv.FormatUint(uint64(Period), 10))
+	v.Set("algorithm", x.GetAlgorithm().String())
+	switch x.GetDigits() {
+	case DigitEight:
+		v.Set("digits", "8")
+	default:
+		v.Set("digits", "6")
+	}
+	u := url.URL{
+		Scheme:   "otpauth",
+		Host:     "totp",
+		Path:     "/" + x.GetIssuer() + ":" + x.GetName(),
+		RawQuery: v.Encode(),
+	}
+	return u.String()
+}
+
+func (x *OTPAccount) Image(width int, height int) (image.Image, error) {
+	b, err := qr.Encode(x.URL(), qr.M, qr.Auto)
 	if err != nil {
 		return nil, err
 	}
-	typ := OTPTypeTOTP
-	return &OTPAccount{
-		Name:      proto.String(name),
-		Issuer:    proto.String(issuer),
-		Algorithm: &o.alg,
-		Secret:    secret,
-		Digits:    &o.digit,
-		Type:      &typ,
-	}, nil
+	b, err = barcode.Scale(b, width, height)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }
 
 func (x *OTPAccount) opts() totp.ValidateOpts {

@@ -7,6 +7,7 @@ syntax = "proto3";
 option go_package = "go.linka.cloud/totp";
 
 import "patch/go.proto";
+import "defaults/defaults.proto";
 
 option (go.lint).enums = false;
 option (go.lint).values = false;
@@ -32,11 +33,11 @@ message OtpAccount {
 
   optional string issuer = 3;
 
-  optional Algorithm algorithm = 4;
+  optional Algorithm algorithm = 4 [(defaults.value).enum = 1];
 
-  optional DigitCount digits = 5;
+  optional DigitCount digits = 5 [(defaults.value).enum = 1];
 
-  optional OtpType type = 6;
+  optional OtpType type = 6 [(defaults.value).enum = 2];
 
   optional int64 counter = 7;
 }

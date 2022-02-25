@@ -25,6 +25,9 @@ import (
 )
 
 var (
+	generateAsURL      bool
+	generateQRCodePath string
+
 	generateCmd = &cobra.Command{
 		Use:     "generate [issuer] [account]",
 		Short:   "Generate a new TOTP account",
@@ -36,11 +39,21 @@ var (
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			fmt.Println(base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(a.Secret))
+			switch {
+			case generateQRCodePath != "":
+				fmt.Println(a.URL())
+				saveAsQRCode(generateQRCodePath, a)
+			case generateAsURL:
+				fmt.Println(a.URL())
+			default:
+				fmt.Println(base32.StdEncoding.WithPadding(base32.NoPadding).EncodeToString(a.Secret))
+			}
 		},
 	}
 )
 
 func init() {
+	generateCmd.Flags().StringVar(&generateQRCodePath, "qrcode", "", "Image path for the generated QRCode Image")
+	generateCmd.Flags().BoolVarP(&generateAsURL, "url", "u", false, "Generate account as URL")
 	rootCmd.AddCommand(generateCmd)
 }

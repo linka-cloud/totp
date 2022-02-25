@@ -18,7 +18,8 @@ MODULE = go.linka.cloud/totp
 PROTO_BASE_PATH = $(PWD)
 
 INCLUDE_PROTO_PATH = -I$(PROTO_BASE_PATH) \
-	-I $(shell go list -m -f {{.Dir}} github.com/alta/protopatch)
+	-I $(shell go list -m -f {{.Dir}} github.com/alta/protopatch) \
+	-I $(shell go list -m -f {{.Dir}} go.linka.cloud/protoc-gen-defaults)
 
 PROTO_OPTS = paths=source_relative
 
@@ -34,6 +35,7 @@ install:
 
 bin:
 	@go install github.com/alta/protopatch/cmd/protoc-gen-go-patch
+	@go install go.linka.cloud/protoc-gen-defaults
 
 clean:
 	@rm -rf .bin
@@ -47,6 +49,7 @@ proto: gen-proto lint
 gen-proto: bin
 	@find $(PROTO_BASE_PATH) -name '*.proto' -type f -exec \
     	protoc $(INCLUDE_PROTO_PATH) \
+    		--go-patch_out=plugin=defaults,$(PROTO_OPTS):. \
     		--go-patch_out=plugin=go,$(PROTO_OPTS):. {} \;
 
 .PHONY: lint
