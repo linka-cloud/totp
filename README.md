@@ -8,4 +8,4 @@ We do not support backward-compatibility for the alpha releases.
 
 A simple utility command line program to handle TOTP Accounts
 
-See [docs](docs) for usage details.
+See [docs](docs/totp.md) for usage details.
