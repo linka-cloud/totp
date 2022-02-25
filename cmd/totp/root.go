@@ -59,6 +59,9 @@ func loadFile(path string) ([]*totp.OTPAccount, error) {
 		path = filepath.Join(h, strings.TrimPrefix(path, "~/"))
 	}
 	b, err := ioutil.ReadFile(path)
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", path, err)
 	}
