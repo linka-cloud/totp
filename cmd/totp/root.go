@@ -33,7 +33,6 @@ import (
 
 var (
 	configPath string
-	quiet      bool
 
 	rootCmd = &cobra.Command{
 		Use: "totp",
@@ -53,7 +52,6 @@ var (
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "c", envd("TOTP_CONFIG", "~/.config/totp/data"), "The path to the TOTP accounts configuration [$TOTP_CONFIG]")
-	rootCmd.PersistentFlags().BoolVarP(&quiet, "quiet", "q", false, "Display only the code")
 }
 
 func envd(name, v string) string {

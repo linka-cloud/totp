@@ -22,6 +22,8 @@ import (
 )
 
 var (
+	detailedValidation = false
+
 	validateCmd = &cobra.Command{
 		Use:     "validate",
 		Short:   "Validates configured TOTP accounts",
@@ -37,7 +39,7 @@ var (
 				if err := v.ValidateConfig(); err != nil {
 					fmt.Printf("%s: %v\n", v.GetName(), err)
 					code = 1
-				} else if !quiet {
+				} else if detailedValidation {
 					fmt.Printf("%s: valid\n", v.GetName())
 				}
 			}
@@ -47,5 +49,6 @@ var (
 )
 
 func init() {
+	validateCmd.Flags().BoolVarP(&detailedValidation, "details", "d", false, "Show all accounts")
 	rootCmd.AddCommand(validateCmd)
 }

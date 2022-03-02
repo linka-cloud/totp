@@ -33,6 +33,9 @@ export PATH := $(GOBIN):$(PATH)
 install:
 	@go build -o /usr/local/bin/totp ./cmd/totp
 
+doc:
+	@go run ./cmd/totp doc
+
 bin:
 	@go install github.com/alta/protopatch/cmd/protoc-gen-go-patch
 	@go install go.linka.cloud/protoc-gen-defaults

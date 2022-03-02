@@ -28,6 +28,7 @@ var (
 		Use:    "doc",
 		Hidden: true,
 		Run: func(cmd *cobra.Command, args []string) {
+			cmd.Root().DisableAutoGenTag = true
 			if err := os.MkdirAll(mdOut, os.ModePerm); err != nil {
 				fmt.Println(err)
 				os.Exit(1)

@@ -24,6 +24,8 @@ import (
 )
 
 var (
+	detailedCode bool
+
 	codeCmd = &cobra.Command{
 		Use:               "code [account]",
 		Short:             "Generates a TOTP code for the account",
@@ -50,7 +52,7 @@ var (
 			if err != nil {
 				fmt.Printf("failed to generate code: %v\n", err)
 			}
-			if quiet {
+			if !detailedCode {
 				fmt.Printf(c)
 				return
 			}
@@ -60,5 +62,6 @@ var (
 )
 
 func init() {
+	codeCmd.Flags().BoolVarP(&detailedCode, "details", "d", false, "Show code with validity duration")
 	rootCmd.AddCommand(codeCmd)
 }
