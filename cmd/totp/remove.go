@@ -30,7 +30,7 @@ var (
 		ValidArgsFunction: completeAccounts,
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]
-			as, err := loadFile(configPath)
+			as, err := store.Load()
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -46,7 +46,10 @@ var (
 				os.Exit(1)
 			}
 			as = append(as[:index], as[index+1:]...)
-			save(configPath, as)
+			if err := store.Save(as); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
 		},
 	}
 )

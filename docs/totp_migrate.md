@@ -1,16 +1,15 @@
-## totp code
+## totp migrate
 
-Generates a TOTP code for the account
+Move configured TOTP accounts to keyring
 
 ```
-totp code [account] [flags]
+totp migrate [flags]
 ```
 
 ### Options
 
 ```
-  -d, --details   Show code with validity duration
-  -h, --help      help for code
+  -h, --help   help for migrate
 ```
 
 ### Options inherited from parent commands

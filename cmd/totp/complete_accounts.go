@@ -21,7 +21,7 @@ import (
 )
 
 func completeAccounts(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-	as, err := loadFile(configPath)
+	as, err := store.Load()
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveDefault
 	}

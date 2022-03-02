@@ -17,38 +17,36 @@ package main
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
+
+	store2 "go.linka.cloud/totp/pkg/store"
 )
 
 var (
-	dumpOut = ""
-
-	dumpCmd = &cobra.Command{
-		Use:   "dump",
-		Short: "Dump configured TOTP accounts to qrcode images",
+	migrateCmd = &cobra.Command{
+		Use:     "migrate",
+		Short:   "Move configured TOTP accounts to keyring",
+		Aliases: []string{"ls", "l"},
 		Run: func(cmd *cobra.Command, args []string) {
-			if dumpOut == "" {
-				dumpOut = filepath.Join(os.TempDir(), "totp")
-			}
-			if err := os.MkdirAll(dumpOut, 0700); err != nil {
-				fmt.Println("create directory: ", err)
-				os.Exit(1)
-			}
 			as, err := store.Load()
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
 			}
-			for _, v := range as {
-				saveAsQRCode(filepath.Join(dumpOut, v.GetName()+".png"), v)
+			s, err := store2.NewKeyRing(keyRingName)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			if err := s.Save(as); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
 			}
 		},
 	}
 )
 
 func init() {
-	dumpCmd.Flags().StringVarP(&dumpOut, "out", "o", ".", "The qrcode images output directory")
-	rootCmd.AddCommand(dumpCmd)
+	rootCmd.AddCommand(migrateCmd)
 }

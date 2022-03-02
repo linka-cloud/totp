@@ -31,7 +31,7 @@ totp completion fish [flags]
 ### Options inherited from parent commands
 
 ```
-  -c, --config string   The path to the TOTP accounts configuration [$TOTP_CONFIG] (default "~/.config/totp/data")
+  -c, --config string   The path to the TOTP accounts configuration [$TOTP_CONFIG]
 ```
 
 ### SEE ALSO

@@ -42,7 +42,7 @@ var (
 				fmt.Println("create directory: ", err)
 				os.Exit(1)
 			}
-			as, err := loadFile(configPath)
+			as, err := store.Load()
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)

@@ -38,7 +38,7 @@ var (
 				fmt.Println("invalid name or secret")
 				os.Exit(1)
 			}
-			as, err := loadOrCreate(configPath)
+			as, err := store.Load()
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -64,7 +64,10 @@ var (
 				fmt.Println("validate config failed: ", err)
 				os.Exit(1)
 			}
-			save(configPath, append(as, a))
+			if err := store.Save(append(as, a)); err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
 		},
 	}
 )

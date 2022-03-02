@@ -17,6 +17,7 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"image/png"
 	"io/ioutil"
@@ -29,29 +30,43 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"go.linka.cloud/totp"
+	store2 "go.linka.cloud/totp/pkg/store"
+)
+
+const (
+	keyRingName = "totp"
+
+	// defaultConfigPath = "~/.config/totp/data"
+	defaultConfigPath = ""
 )
 
 var (
 	configPath string
+	useKeyRing = true
+
+	store store2.Store
 
 	rootCmd = &cobra.Command{
 		Use: "totp",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			if strings.TrimSpace(configPath) == "" {
+				return initKeyRing()
+			}
 			if !strings.HasPrefix(configPath, "~/") {
-				return nil
+				return initFileStore()
 			}
 			h, err := os.UserHomeDir()
 			if err != nil {
 				return fmt.Errorf("home: %w", err)
 			}
 			configPath = filepath.Join(h, strings.TrimPrefix(configPath, "~/"))
-			return nil
+			return initFileStore()
 		},
 	}
 )
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "c", envd("TOTP_CONFIG", "~/.config/totp/data"), "The path to the TOTP accounts configuration [$TOTP_CONFIG]")
+	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "c", envd("TOTP_CONFIG", defaultConfigPath), "The path to the TOTP accounts configuration [$TOTP_CONFIG]")
 }
 
 func envd(name, v string) string {
@@ -61,33 +76,17 @@ func envd(name, v string) string {
 	return v
 }
 
-func loadFile(path string) ([]*totp.OTPAccount, error) {
-	b, err := ioutil.ReadFile(path)
-	if os.IsNotExist(err) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", path, err)
-	}
-	return load(b)
+func initKeyRing() (err error) {
+	store, err = store2.NewKeyRing(keyRingName)
+	return
 }
 
-func loadOrCreate(path string) ([]*totp.OTPAccount, error) {
-	as, err := loadFile(path)
-	if err == nil {
-		return as, nil
+func initFileStore() (err error) {
+	store, err = store2.NewFileStore(configPath)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return err
 	}
-	if !os.IsNotExist(err) {
-		return nil, err
-	}
-	if err := os.MkdirAll(filepath.Dir(path), 0700); err != nil {
-		return nil, fmt.Errorf("failed to create config directory: %w", err)
-	}
-	f, err := os.Create(path)
-	if err != nil {
-		return nil, fmt.Errorf("create config file: %w", err)
-	}
-	return nil, f.Close()
+	return nil
 }
 
 func fromGoogleAuthenticatorMigration(data string) ([]*totp.OTPAccount, error) {
@@ -108,26 +107,6 @@ func load(b []byte) ([]*totp.OTPAccount, error) {
 		return nil, fmt.Errorf("proto decode: %w", err)
 	}
 	return p.OTPAccounts, nil
-}
-
-func save(path string, as []*totp.OTPAccount) {
-	data := &totp.OTPData{
-		OTPAccounts: as,
-	}
-	b, err := proto.Marshal(data)
-	if err != nil {
-		fmt.Printf("encode failed: %v\n", err)
-		os.Exit(1)
-	}
-	tmp := path + ".tmp"
-	if err := ioutil.WriteFile(tmp, b, 0700); err != nil {
-		fmt.Printf("write config failed: %v\n", err)
-		os.Exit(1)
-	}
-	if err := os.Rename(tmp, configPath); err != nil {
-		fmt.Printf("write config failed: %v\n", err)
-		os.Exit(1)
-	}
 }
 
 func saveAsQRCode(path string, a *totp.OTPAccount) {

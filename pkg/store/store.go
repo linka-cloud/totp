@@ -12,33 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package store
 
 import (
-	"fmt"
-	"os"
-
-	"github.com/spf13/cobra"
+	"go.linka.cloud/totp"
 )
 
-var (
-	listCmd = &cobra.Command{
-		Use:     "list",
-		Short:   "List configured TOTP accounts",
-		Aliases: []string{"ls", "l"},
-		Run: func(cmd *cobra.Command, args []string) {
-			as, err := store.Load()
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(1)
-			}
-			for _, v := range as {
-				fmt.Println(v.GetName())
-			}
-		},
-	}
-)
-
-func init() {
-	rootCmd.AddCommand(listCmd)
+type Store interface {
+	Load() ([]*totp.OTPAccount, error)
+	Save(accounts []*totp.OTPAccount) error
 }

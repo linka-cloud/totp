@@ -17,7 +17,7 @@ See each sub-command's help for details on how to use the generated script.
 ### Options inherited from parent commands
 
 ```
-  -c, --config string   The path to the TOTP accounts configuration [$TOTP_CONFIG] (default "~/.config/totp/data")
+  -c, --config string   The path to the TOTP accounts configuration [$TOTP_CONFIG]
 ```
 
 ### SEE ALSO
