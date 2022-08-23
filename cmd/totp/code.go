@@ -31,6 +31,7 @@ var (
 		Short:             "Generates a TOTP code for the account",
 		Aliases:           []string{"get", "code"},
 		ValidArgsFunction: completeAccounts,
+		Args:              cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			as, err := store.Load()
 			if err != nil {

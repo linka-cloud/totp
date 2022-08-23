@@ -32,6 +32,7 @@ var (
 		Use:               "show [name]",
 		Short:             "Create QRCode for TOTP account",
 		Aliases:           []string{"qr", "qrcode"},
+		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: completeAccounts,
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]

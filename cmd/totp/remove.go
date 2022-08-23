@@ -27,6 +27,7 @@ var (
 		Use:               "remove [name]",
 		Short:             "Remove a TOTP accounts",
 		Aliases:           []string{"rm", "delete", "del"},
+		Args:              cobra.ExactArgs(1),
 		ValidArgsFunction: completeAccounts,
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]

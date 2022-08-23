@@ -27,7 +27,7 @@ var (
 	migrateCmd = &cobra.Command{
 		Use:     "migrate",
 		Short:   "Move configured TOTP accounts to keyring",
-		Aliases: []string{"ls", "l"},
+		Aliases: []string{"mig", "move"},
 		Run: func(cmd *cobra.Command, args []string) {
 			as, err := store.Load()
 			if err != nil {
