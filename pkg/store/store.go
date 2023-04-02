@@ -21,4 +21,6 @@ import (
 type Store interface {
 	Load() ([]*totp.OTPAccount, error)
 	Save(accounts []*totp.OTPAccount) error
+	Import(data []byte) error
+	Dump() (string, error)
 }

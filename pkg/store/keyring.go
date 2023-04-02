@@ -52,3 +52,15 @@ func (k *keyRing) Save(accounts []*totp.OTPAccount) error {
 	}
 	return keyring.Set(k.name, key, string(b))
 }
+
+func (k *keyRing) Import(v []byte) error {
+	var data totp.OTPData
+	if err := prototext.Unmarshal(v, &data); err != nil {
+		return err
+	}
+	return keyring.Set(k.name, key, string(v))
+}
+
+func (k *keyRing) Dump() (string, error) {
+	return keyring.Get(k.name, key)
+}

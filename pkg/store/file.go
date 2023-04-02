@@ -16,7 +16,6 @@ package store
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"google.golang.org/protobuf/proto"
@@ -33,7 +32,7 @@ func NewFileStore(path string) (Store, error) {
 }
 
 func (f *fileStore) Load() ([]*totp.OTPAccount, error) {
-	b, err := ioutil.ReadFile(f.path)
+	b, err := os.ReadFile(f.path)
 	if os.IsNotExist(err) {
 		return nil, nil
 	}
@@ -52,13 +51,32 @@ func (f *fileStore) Save(as []*totp.OTPAccount) error {
 		return fmt.Errorf("encode failed: %v", err)
 	}
 	tmp := f.path + ".tmp"
-	if err := ioutil.WriteFile(tmp, b, 0700); err != nil {
+	if err := os.WriteFile(tmp, b, 0700); err != nil {
 		return fmt.Errorf("write config failed: %v", err)
 	}
 	if err := os.Rename(tmp, f.path); err != nil {
 		return fmt.Errorf("write config failed: %v", err)
 	}
 	return nil
+}
+
+func (f *fileStore) Import(b []byte) error {
+	if _, err := load(b); err != nil {
+		return err
+	}
+	tmp := f.path + ".tmp"
+	if err := os.WriteFile(tmp, b, 0700); err != nil {
+		return fmt.Errorf("write config failed: %v", err)
+	}
+	if err := os.Rename(tmp, f.path); err != nil {
+		return fmt.Errorf("write config failed: %v", err)
+	}
+	return nil
+}
+
+func (f *fileStore) Dump() (string, error) {
+	b, err := os.ReadFile(f.path)
+	return string(b), err
 }
 
 func load(b []byte) ([]*totp.OTPAccount, error) {
