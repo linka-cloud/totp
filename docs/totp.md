@@ -18,6 +18,7 @@
 * [totp generate](totp_generate.md)	 - Generate a new TOTP account
 * [totp list](totp_list.md)	 - List configured TOTP accounts
 * [totp migrate](totp_migrate.md)	 - Move configured TOTP accounts to keyring
+* [totp recover](totp_recover.md)	 - Recover a TOTP Keyring content
 * [totp remove](totp_remove.md)	 - Remove a TOTP accounts
 * [totp show](totp_show.md)	 - Create QRCode for TOTP account
 * [totp validate](totp_validate.md)	 - Validates configured TOTP accounts

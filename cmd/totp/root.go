@@ -20,7 +20,6 @@ import (
 	"errors"
 	"fmt"
 	"image/png"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -120,7 +119,7 @@ func saveAsQRCode(path string, a *totp.OTPAccount) {
 		fmt.Println("failed to encode qrcode: ", err)
 		os.Exit(1)
 	}
-	if err := ioutil.WriteFile(path, buf.Bytes(), 0700); err != nil {
+	if err := os.WriteFile(path, buf.Bytes(), 0700); err != nil {
 		fmt.Println("failed to write qrcode: ", err)
 		os.Exit(1)
 	}
