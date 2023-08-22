@@ -33,7 +33,7 @@ var (
 		Aliases: []string{"a", "new", "n", "create", "c"},
 		Args:    cobra.ExactArgs(2),
 		Run: func(cmd *cobra.Command, args []string) {
-			name, secret := strings.TrimSpace(args[0]), strings.TrimSpace(args[1])
+			name, secret := strings.TrimSpace(args[0]), strings.ToUpper(strings.TrimSpace(args[1]))
 			if name == "" || secret == "" {
 				fmt.Println("invalid name or secret")
 				os.Exit(1)
