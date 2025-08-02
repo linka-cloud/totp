@@ -15,8 +15,14 @@
 package store
 
 import (
+	"bytes"
+	"compress/gzip"
+	"io"
+	"strings"
+
 	"github.com/zalando/go-keyring"
 	"google.golang.org/protobuf/encoding/prototext"
+	"google.golang.org/protobuf/proto"
 
 	"go.linka.cloud/totp"
 )
@@ -38,19 +44,39 @@ func (k *keyRing) Load() ([]*totp.OTPAccount, error) {
 	if err != nil {
 		return nil, err
 	}
+	var r io.Reader = strings.NewReader(v)
+	if gz, err := gzip.NewReader(strings.NewReader(v)); err == nil {
+		defer gz.Close()
+		r = gz
+	}
+	b, err := io.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
 	var data totp.OTPData
-	if err := prototext.Unmarshal([]byte(v), &data); err != nil {
+	if err := proto.Unmarshal(b, &data); err == nil {
+		return data.OTPAccounts, nil
+	}
+	if err := prototext.Unmarshal(b, &data); err != nil {
 		return nil, err
 	}
 	return data.OTPAccounts, nil
 }
 
 func (k *keyRing) Save(accounts []*totp.OTPAccount) error {
-	b, err := prototext.Marshal(&totp.OTPData{OTPAccounts: accounts})
+	b, err := proto.Marshal(&totp.OTPData{OTPAccounts: accounts})
 	if err != nil {
 		return err
 	}
-	return keyring.Set(k.name, key, string(b))
+	var buf bytes.Buffer
+	w := gzip.NewWriter(&buf)
+	if _, err := w.Write(b); err != nil {
+		return err
+	}
+	if err := w.Close(); err != nil {
+		return err
+	}
+	return keyring.Set(k.name, key, buf.String())
 }
 
 func (k *keyRing) Import(v []byte) error {
